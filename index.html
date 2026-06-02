@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Học liệu Tương tác: Bài 9 - Tính chất của Âm thanh</title>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuedraggable@next/dist/vuedraggable.umd.min.js"></script>
+
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: { typeset: false } 
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        .animate-fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        [v-cloak] { display: none; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+
+<body class="bg-slate-50 font-sans text-gray-800 p-4 md:p-8 min-h-screen overflow-x-hidden">
+    <div id="app" v-cloak class="max-w-6xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden p-6 md:p-8 border border-slate-100">
+        
+        <h1 class="text-3xl font-extrabold text-center text-blue-700 mb-2 uppercase tracking-wide">Bài 9: Tính chất của Âm thanh</h1>
+        <p class="text-center text-gray-500 mb-8 font-medium">Sử dụng Mô hình Sóng để giải thích đặc trưng sinh lý của Âm</p>
+
+        <div class="flex flex-wrap justify-center mb-8 bg-slate-100 p-1 rounded-lg shadow-inner gap-2">
+            <button v-for="tab in tabs" :key="tab.id" @click="selectTab(tab.id)"
+                :class="['px-6 py-3 rounded-md font-semibold text-sm md:text-base transition-all duration-300 whitespace-nowrap',
+                         activeTab === tab.id ? 'bg-blue-600 text-white shadow-md transform scale-105' : 'text-gray-600 hover:bg-blue-100 hover:text-blue-800']">
+                {{ tab.name }}
+            </button>
+        </div>
+
+        <div class="animate-fade-in min-h-[400px]">
+            
+            <div v-show="activeTab === 1">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-blue-500 pl-3">Khởi động: Bản đồ Giác quan Âm thanh</h2>
+                <p class="mb-6 text-gray-600 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <strong>Nhiệm vụ:</strong> Học sinh hãy ghép nối các đại lượng, khái niệm Vật lý khách quan với những cảm nhận Sinh lý chủ quan tương ứng của tai người.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-100 p-4 rounded-xl border-2 border-dashed border-slate-300">
+                        <h3 class="font-bold text-center mb-4 text-slate-600">Kho đại lượng Vật lý</h3>
+                        <draggable v-model="poolItems" group="soundConcepts" item-key="id" class="flex flex-col gap-3 min-h-[150px]">
+                            <template #item="{element}">
+                                <div class="p-3 bg-white border border-gray-300 rounded-lg shadow-sm font-medium cursor-pointer hover:shadow-md hover:border-blue-400 transition-all text-sm md:text-base">
+                                    <span v-html="element.name"></span>
+                                </div>
+                            </template>
+                        </draggable>
+                        <p v-if="poolItems.length === 0" class="text-center text-green-600 font-bold mt-4">🎉 Bạn đã hoàn thành bản đồ giác quan!</p>
+                    </div>
+
+                    <div class="flex flex-col gap-4">
+                        <div v-for="zone in conceptZones" :key="zone.id" :class="['p-4 rounded-xl border-2', zone.bgClass]">
+                            <h3 class="font-bold mb-2 text-sm uppercase tracking-wide text-gray-700">{{ zone.title }}</h3>
+                            <draggable v-model="zone.items" group="soundConcepts" item-key="id" class="flex flex-col gap-2 min-h-[60px] bg-white bg-opacity-60 rounded-lg p-2">
+                                <template #item="{element}">
+                                    <div :class="['p-3 rounded-lg shadow-sm font-medium border-l-4 flex justify-between items-center text-sm', 
+                                                 element.correctZone === zone.id ? 'bg-green-50 border-green-500 text-green-800' : 'bg-red-50 border-red-500 text-red-800']">
+                                        <span v-html="element.name" class="pr-2"></span>
+                                        <span v-if="element.correctZone === zone.id" class="text-green-600 font-bold whitespace-nowrap">✔️ Đúng</span>
+                                        <span v-else class="text-red-600 font-bold text-xs whitespace-nowrap">❌ Sai</span>
+                                    </div>
+                                </template>
+                            </draggable>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-show="activeTab === 2">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 border-l-4 border-indigo-500 pl-3">Trọng tâm: Mô hình Sóng Âm</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <div class="bg-amber-50 p-6 rounded-xl border border-amber-200 shadow-sm hover:shadow-md transition-shadow md:col-span-2">
+                        <h3 class="text-lg font-bold text-amber-800 mb-3 uppercase text-sm">1. Bản chất Sóng Âm (Sóng dọc)</h3>
+                        <p class="text-amber-900 leading-relaxed text-sm md:text-base font-medium">
+                            Khi truyền trong không khí, sóng âm là sóng dọc. Sự dao động của nguồn âm làm cho các lớp không khí bị đẩy lại gần nhau tạo ra <strong>Vùng Nén (áp suất cao)</strong>, và kéo dãn ra xa nhau tạo ra <strong>Vùng Dãn (áp suất thấp)</strong>. Các xung nén - dãn này xen kẽ và lan truyền đi tạo thành âm thanh.
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
+                        <h3 class="text-lg font-bold text-blue-700 mb-3 uppercase text-sm">2. Độ to phụ thuộc Biên độ</h3>
+                        <p class="text-gray-700 leading-relaxed text-sm">
+                            Độ to của âm gắn liền với <strong>Biên độ dao động</strong> của sóng âm. <br><br>
+                            👉 <em>Ví dụ:</em> Khi gảy mạnh dây đàn, dây đàn dao động với biên độ lớn $\rightarrow$ tạo ra vùng không khí bị nén rất chặt $\rightarrow$ sóng âm phát ra có biên độ lớn $\rightarrow$ ta nghe âm thanh to hơn.
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl border border-teal-100 shadow-sm hover:shadow-md transition-shadow">
+                        <h3 class="text-lg font-bold text-teal-700 mb-3 uppercase text-sm">3. Độ cao phụ thuộc Tần số</h3>
+                        <p class="text-gray-700 leading-relaxed text-sm mb-2">Độ cao (bổng hay trầm) của âm gắn liền với <strong>Tần số</strong> của sóng âm.</p>
+                        <ul class="list-disc pl-5 text-gray-700 space-y-2 text-sm">
+                            <li>Âm có tần số lớn được gọi là <strong>âm bổng</strong> (âm cao). <em>Ví dụ: giọng ca sĩ nữ Soprano.</em></li>
+                            <li>Âm có tần số nhỏ được gọi là <strong>âm trầm</strong> (âm thấp). <em>Ví dụ: giọng ca sĩ nam Bass.</em></li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+
+            <div v-show="activeTab === 3">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-teal-500 pl-3">Máy hiện sóng Đồng bộ: Sóng ngang & Sóng dọc</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-6">
+                        <div class="bg-slate-100 p-4 rounded-lg border border-slate-200">
+                            <h4 class="font-bold text-slate-800 mb-2">Điều khiển Nguồn âm</h4>
+                            <p class="text-xs text-slate-600 mb-2">Hãy thay đổi Tần số và Biên độ để quan sát sự tương ứng giữa Đồ thị Áp suất (hình sin) và Mật độ không khí (chấm xanh).</p>
+                        </div>
+
+                        <div>
+                            <label class="flex justify-between font-bold text-gray-700 mb-2">
+                                <span>Biên độ (Độ to)</span>
+                                <span class="text-blue-600">{{ simAmplitude }}</span>
+                            </label>
+                            <input type="range" v-model.number="simAmplitude" @input="updateWaveChart" min="1" max="5" step="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                            <p class="text-xs text-gray-500 mt-1 italic">Kéo tăng $\rightarrow$ Âm to $\rightarrow$ Không khí nén chặt hơn</p>
+                        </div>
+
+                        <div>
+                            <label class="flex justify-between font-bold text-gray-700 mb-2">
+                                <span>Tần số (Độ cao)</span>
+                                <span class="text-teal-600">{{ simFrequency }} Hz</span>
+                            </label>
+                            <input type="range" v-model.number="simFrequency" @input="updateWaveChart" min="1" max="5" step="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-teal-600">
+                            <p class="text-xs text-gray-500 mt-1 italic">Kéo tăng $\rightarrow$ Âm bổng $\rightarrow$ Bước sóng co hẹp lại</p>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-3 bg-white p-4 rounded-xl border border-gray-200 shadow-md flex flex-col">
+                        <div class="relative w-full h-80 md:h-[450px] flex-grow">
+                            <canvas id="syncedWaveChart"></canvas>
+                        </div>
+                        <div class="flex justify-center gap-6 mt-4 text-sm font-medium bg-slate-50 p-2 rounded">
+                            <div class="flex items-center gap-2">
+                                <span class="w-4 h-1 bg-emerald-500 block"></span> <span>Phân tử khí (Mô phỏng Nén - Dãn)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-4 h-1 bg-blue-500 block"></span> <span>Đồ thị Áp suất (Sóng hình sin)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-show="activeTab === 4">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 border-l-4 border-purple-500 pl-3">Khắc phục ngộ nhận - Hiểu sâu bản chất</h2>
+                
+                <div class="space-y-6">
+                    <div v-for="(q, index) in quizData" :key="q.id" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Câu {{ index + 1 }}: <span class="font-normal" v-html="q.question"></span></h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <button v-for="opt in q.options" :key="opt.key"
+                                @click="selectAnswer(q.id, opt.key)"
+                                :disabled="!!userAnswers[q.id]"
+                                :class="[
+                                    'p-4 rounded-xl border-2 text-left transition-all duration-200',
+                                    !userAnswers[q.id] ? 'border-slate-200 hover:border-purple-400 hover:bg-purple-50' : '',
+                                    userAnswers[q.id] === opt.key && opt.key !== q.correctAnswer ? 'border-red-500 bg-red-50 text-red-700' : '',
+                                    userAnswers[q.id] && opt.key === q.correctAnswer ? 'border-green-500 bg-green-50 text-green-800' : '',
+                                    userAnswers[q.id] && userAnswers[q.id] !== opt.key && opt.key !== q.correctAnswer ? 'border-slate-200 opacity-50 bg-slate-50' : ''
+                                ]">
+                                <div class="flex items-start">
+                                    <span class="font-bold mr-3 min-w-[24px]" :class="[
+                                        userAnswers[q.id] === opt.key && opt.key !== q.correctAnswer ? 'text-red-700' : '',
+                                        userAnswers[q.id] && opt.key === q.correctAnswer ? 'text-green-700' : 'text-purple-700'
+                                    ]">{{ opt.key }}.</span>
+                                    <span v-html="opt.text" class="flex-1"></span>
+                                </div>
+                            </button>
+                        </div>
+                        
+                        <div v-if="userAnswers[q.id]" class="mt-4 animate-fade-in">
+                            <div v-if="userAnswers[q.id] === q.correctAnswer" class="p-4 bg-green-50 border border-green-200 rounded-xl flex gap-3 items-start">
+                                <span class="text-green-600 text-xl leading-none">✅</span>
+                                <div>
+                                    <strong class="text-green-800 block mb-1">Chính xác!</strong>
+                                    <span class="text-green-700 text-sm" v-html="getFeedback(q, q.correctAnswer)"></span>
+                                </div>
+                            </div>
+                            <div v-else class="p-4 bg-red-50 border border-red-200 rounded-xl flex gap-3 items-start">
+                                <span class="text-red-600 text-xl leading-none">❌</span>
+                                <div>
+                                    <strong class="text-red-800 block mb-1">Lỗi ngộ nhận!</strong>
+                                    <span class="text-red-700 text-sm" v-html="getFeedback(q, userAnswers[q.id])"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    tabs: [
+                        { id: 1, name: '1. Khởi động' },
+                        { id: 2, name: '2. Lý thuyết' },
+                        { id: 3, name: '3. Mô phỏng' },
+                        { id: 4, name: '4. Trắc nghiệm' }
+                    ],
+                    activeTab: 1,
+
+                    // Dữ liệu Tab 1
+                    poolItems: [
+                        { id: 'item_A_large', name: 'Biên độ dao động của nguồn âm lớn', correctZone: 'sound_loudness' },
+                        { id: 'item_f_high', name: 'Tần số của sóng âm lớn ($f$ cao)', correctZone: 'sound_pitch' },
+                        { id: 'item_f_low', name: 'Tần số của sóng âm nhỏ ($f$ thấp)', correctZone: 'sound_pitch' },
+                        { id: 'item_nature', name: 'Các lớp không khí Nén - Dãn xen kẽ', correctZone: 'sound_nature' },
+                        { id: 'item_type', name: 'Sóng cơ dọc', correctZone: 'sound_nature' }
+                    ],
+                    conceptZones: [
+                        { id: 'sound_loudness', title: 'Quy định ĐỘ TO (Âm lượng)', bgClass: 'bg-blue-50 border-blue-200 text-blue-900', items: [] },
+                        { id: 'sound_pitch', title: 'Quy định ĐỘ CAO (Bổng/Trầm)', bgClass: 'bg-teal-50 border-teal-200 text-teal-900', items: [] },
+                        { id: 'sound_nature', title: 'Bản chất truyền sóng Âm trong khí', bgClass: 'bg-amber-50 border-amber-200 text-amber-900', items: [] }
+                    ],
+
+                    // Dữ liệu Tab 3 (Mô phỏng)
+                    myChart: null,
+                    simAmplitude: 3,
+                    simFrequency: 2,
+
+                    // Dữ liệu Tab 4
+                    userAnswers: {},
+                    quizData: [
+                        {
+                            id: 1,
+                            question: "Một nghệ sĩ chơi đàn guitar gảy mạnh hơn bình thường vào một dây đàn (làm tăng biên độ dao động của dây đàn). Âm thanh phát ra từ dây đàn đó sẽ có sự thay đổi như thế nào? <br><em class='text-sm text-gray-500'>(Dựa theo SGK Bài 9 - Tính chất của âm)</em>",
+                            options: [
+                                { key: 'A', text: "Âm thanh nghe bổng hơn (cao hơn).", feedback: "Lỗi ngộ nhận ngôn ngữ! Trong đời sống ta hay nói 'hát cao lên' để chỉ việc hát to, nhưng trong vật lý, Độ cao (bổng/trầm) chỉ do Tần số quy định. Lực gảy không làm đổi tần số dây đàn." },
+                                { key: 'B', text: "Âm thanh truyền đi với tốc độ nhanh hơn.", feedback: "Lỗi sai lý thuyết! Tốc độ truyền âm chỉ phụ thuộc vào bản chất của môi trường (như mật độ không khí, nhiệt độ), không phụ thuộc vào biên độ nguồn." },
+                                { key: 'C', text: "Âm thanh nghe to hơn.", feedback: "Chính xác! Gảy mạnh làm tăng biên độ dao động của dây đàn, kéo theo biên độ của sóng âm tăng lên, giúp năng lượng âm truyền đến tai lớn hơn $\\rightarrow$ nghe to hơn." },
+                                { key: 'D', text: "Tần số của âm thanh phát ra tăng lên.", feedback: "Lỗi nhầm đại lượng! Tần số phụ thuộc vào đặc tính cấu tạo của dây đàn (chiều dài, độ căng, tiết diện). Lực gảy chỉ làm thay đổi biên độ." }
+                            ],
+                            correctAnswer: 'C'
+                        },
+                        {
+                            id: 2,
+                            question: "Giọng hát của ca sĩ nữ Soprano thường 'cao' và 'thanh' (bổng) hơn rất nhiều so với giọng ca sĩ nam Bass (trầm). Về mặt vật lý học, sóng âm do giọng ca sĩ nữ phát ra có đặc điểm gì so với giọng nam? <br><em class='text-sm text-gray-500'>(Dựa theo SGK Bài 9)</em>",
+                            options: [
+                                { key: 'A', text: "Có tần số lớn hơn.", feedback: "Tuyệt vời! Độ cao của âm gắn liền với tần số. Âm càng bổng (như giọng nữ) thì tần số dao động của dây thanh quản và sóng âm phát ra càng lớn." },
+                                { key: 'B', text: "Có tần số nhỏ hơn.", feedback: "Lỗi suy luận ngược! Tần số nhỏ sẽ tạo ra âm trầm (thấp) giống như giọng ca nam Bass hoặc tiếng trống." },
+                                { key: 'C', text: "Có biên độ lớn hơn.", feedback: "Lỗi nhầm lẫn đặc trưng! Biên độ lớn chỉ làm cho âm thanh nghe to hơn (âm lượng lớn), chứ không làm thay đổi độ cao (bổng/trầm) của giọng hát." },
+                                { key: 'D', text: "Có tốc độ lan truyền nhanh hơn.", feedback: "Lỗi sai bản chất! Cùng truyền trong môi trường không khí ở hội trường, sóng âm của giọng nam hay nữ đều lan truyền với tốc độ như nhau (khoảng $340\\text{ m/s}$)." }
+                            ],
+                            correctAnswer: 'A'
+                        },
+                        {
+                            id: 3,
+                            question: "Trong không khí, sóng âm lan truyền dưới dạng sóng dọc. Quá trình này được mô tả chính xác nhất bởi hiện tượng nào sau đây? <br><em class='text-sm text-gray-500'>(Dựa theo SGK Bài 9)</em>",
+                            options: [
+                                { key: 'A', text: "Sự uốn lượn hình sin lên xuống của các phân tử không khí.", feedback: "Lỗi sai loại sóng! Uốn lượn lên xuống vuông góc với phương truyền là đặc điểm của sóng ngang. Âm thanh trong khí là sóng dọc." },
+                                { key: 'B', text: "Sự lan truyền của các lớp không khí bị nén và dãn xen kẽ nhau.", feedback: "Chính xác! Nguồn âm dao động sẽ đẩy và kéo các phân tử khí, tạo ra các xung áp suất cao (nén) và áp suất thấp (dãn) truyền đi dọc theo phương truyền sóng." },
+                                { key: 'C', text: "Sự bay tịnh tiến của luồng gió từ nguồn âm đến tai người nghe.", feedback: "Lỗi ngộ nhận dòng chảy! Sóng âm không tạo ra luồng gió mang theo vật chất. Phân tử khí chỉ dao động tại chỗ quanh vị trí cân bằng." },
+                                { key: 'D', text: "Sự biến thiên của điện trường và từ trường trong không gian.", feedback: "Lỗi nhầm bản chất vật lý! Biến thiên điện từ trường là bản chất của sóng điện từ (ánh sáng), còn sóng âm là sự truyền biến dạng cơ học." }
+                            ],
+                            correctAnswer: 'B'
+                        },
+                        {
+                            id: 4,
+                            question: "Khi sử dụng máy hiện sóng (Oscilloscope) để thu âm thanh của một chiếc âm thoa, màn hình sẽ hiển thị một đồ thị hình sin biểu diễn áp suất. Đỉnh cao nhất của đồ thị hình sin này thực chất đại diện cho điều gì của sóng âm trong không khí?",
+                            options: [
+                                { key: 'A', text: "Vị trí không khí bị dãn loãng nhất (áp suất cực tiểu).", feedback: "Lỗi đọc đồ thị! Vị trí dãn loãng nhất, áp suất giảm xuống mức cực tiểu tương ứng với đáy (lõm) của đồ thị hình sin." },
+                                { key: 'B', text: "Vị trí các phân tử không khí bay lên cao nhất.", feedback: "Lỗi ngộ nhận phương dao động! Sóng âm là sóng dọc, các phân tử khí chỉ dao động ngang (tới/lui) dọc theo phương truyền, không bay lên xuống." },
+                                { key: 'C', text: "Vị trí không khí bị nén chặt nhất (áp suất cực đại).", feedback: "Hoàn toàn chính xác! Kéo thử mô phỏng ở Tab 3 bạn sẽ thấy. Đồ thị hình sin của âm thanh thực chất là đồ thị biến thiên áp suất. Đỉnh sóng sin tương ứng với vùng các phân tử khí bị ép chặt vào nhau nhất (Vùng Nén)." },
+                                { key: 'D', text: "Khoảng cách xa nhất mà sóng âm có thể truyền tới.", feedback: "Lỗi sai ý nghĩa đại lượng! Trục tung của đồ thị sóng âm hiển thị sự thay đổi áp suất, không biểu diễn khoảng cách truyền sóng xa hay gần." }
+                            ],
+                            correctAnswer: 'C'
+                        }
+                    ]
+                };
+            },
+            methods: {
+                selectTab(tabId) {
+                    this.activeTab = tabId;
+                    this.triggerMathJax();
+                },
+                selectAnswer(questionId, answerKey) {
+                    if (!this.userAnswers[questionId]) {
+                        this.userAnswers[questionId] = answerKey;
+                        this.triggerMathJax();
+                    }
+                },
+                getFeedback(question, answerKey) {
+                    const opt = question.options.find(o => o.key === answerKey);
+                    return opt ? opt.feedback : '';
+                },
+                triggerMathJax() {
+                    this.$nextTick(() => {
+                        if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                            MathJax.typesetPromise().catch((err) => console.log('MathJax Error:', err));
+                        }
+                    });
+                },
+
+                // --- CHART.JS LOGIC KÉP (LINE + SCATTER) ---
+                generateChartData() {
+                    const lineData = [];
+                    const scatterData = [];
+                    
+                    const L_MAX = 100; // Chiều dài ống mô phỏng
+                    
+                    // 1. Data cho đường Sóng Hình Sin (Đồ thị Áp suất)
+                    // y = A * sin(2*pi * f * x / L_MAX)
+                    for (let x = 0; x <= L_MAX; x += 0.5) {
+                        let y = this.simAmplitude * Math.sin(2 * Math.PI * this.simFrequency * x / L_MAX);
+                        lineData.push({ x: x, y: y });
+                    }
+                    
+                    // 2. Data cho Phân tử khí (Mô phỏng Nén - Dãn)
+                    // Ở đây để vùng nén (chấm tụ lại) tương ứng với Đỉnh sóng sin (y lớn nhất),
+                    // li độ dao động ngang u của phân tử phải làm cho gradient mật độ max.
+                    // Áp dụng x_thuc_te = x_0 + A * cos(2*pi * f * x_0 / L_MAX)
+                    // Đặt các phân tử ở Y = 7, 8, 9, 10 để nằm trên đồ thị sin
+                    const Y_ROWS = [6.5, 7.5, 8.5, 9.5];
+                    for (let x0 = 0; x0 <= L_MAX; x0 += 1.5) {
+                        // Dao động ngang
+                        let dx = this.simAmplitude * 0.8 * Math.cos(2 * Math.PI * this.simFrequency * x0 / L_MAX);
+                        let x_actual = x0 + dx;
+                        
+                        // Thêm vào các hàng
+                        for(let y_row of Y_ROWS) {
+                            scatterData.push({ x: x_actual, y: y_row });
+                        }
+                    }
+
+                    return { lineData, scatterData };
+                },
+                
+                initWaveChart() {
+                    const canvas = document.getElementById('syncedWaveChart');
+                    if (!canvas) return;
+                    const ctx = canvas.getContext('2d');
+                    
+                    const initialData = this.generateChartData();
+
+                    this.myChart = Vue.markRaw(new Chart(ctx, {
+                        data: {
+                            datasets: [
+                                {
+                                    type: 'scatter',
+                                    label: 'Phân tử khí (Sóng dọc)',
+                                    data: initialData.scatterData,
+                                    backgroundColor: '#10b981', // emerald-500
+                                    pointRadius: 2.5,
+                                    pointHoverRadius: 3
+                                },
+                                {
+                                    type: 'line',
+                                    label: 'Áp suất (Sóng hình sin)',
+                                    data: initialData.lineData,
+                                    borderColor: '#3b82f6', // blue-500
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    borderWidth: 3,
+                                    pointRadius: 0,
+                                    tension: 0.4,
+                                    fill: true
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: false, // Bắt buộc false để mượt thời gian thực
+                            scales: {
+                                x: {
+                                    type: 'linear', min: 0, max: 100,
+                                    title: { display: true, text: 'Khoảng cách x', font: { weight: 'bold' } },
+                                    grid: { display: false },
+                                    ticks: { display: false }
+                                },
+                                y: {
+                                    type: 'linear', min: -5, max: 11,
+                                    title: { display: true, text: 'Li độ / Mật độ', font: { weight: 'bold' } },
+                                    grid: { 
+                                        color: (ctx) => ctx.tick.value === 0 ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.05)', 
+                                        lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1 
+                                    },
+                                    ticks: { display: false }
+                                }
+                            },
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: { enabled: false }
+                            }
+                        }
+                    }));
+                },
+                
+                updateWaveChart() {
+                    if (!this.myChart) return;
+                    const { lineData, scatterData } = this.generateChartData();
+                    // Cập nhật Scatter (Phân tử khí)
+                    this.myChart.data.datasets[0].data = scatterData;
+                    // Cập nhật Line (Đồ thị hình sin)
+                    this.myChart.data.datasets[1].data = lineData;
+                    // Render lập tức không hiệu ứng
+                    this.myChart.update('none'); 
+                }
+            },
+            mounted() {
+                this.initWaveChart();
+                this.triggerMathJax();
+            },
+            updated() {
+                this.triggerMathJax();
+            }
+        });
+
+        app.component('draggable', window.vuedraggable);
+        app.mount('#app');
+    </script>
+</body>
+</html>
